@@ -31,6 +31,7 @@ final class LensGlintService: NSObject, ObservableObject {
     func configure(from t: CatalogThresholds) {
         params = GlintDetector.Params(lumaThreshold: t.lensLumaThreshold, minCluster: t.lensMinCluster,
                                       maxCluster: t.lensMaxCluster, maxSide: 14, minFill: t.lensMinFill)
+        baseLuma = t.lensLumaThreshold
     }
 
     func start() async {
@@ -76,6 +77,19 @@ final class LensGlintService: NSObject, ObservableObject {
             torchOn = false
         }
         device.unlockForConfiguration()
+    }
+
+    /// 0 (low) ... 1 (high). Higher sensitivity lowers the brightness threshold.
+    @Published var sensitivity: Double = 0.5
+    private var baseLuma: Double = 0.96
+    func setSensitivity(_ s: Double) {
+        sensitivity = s
+        params.lumaThreshold = min(0.995, max(0.80, baseLuma + (0.5 - s) * 0.12))
+    }
+
+    func mark(_ c: GlintCandidate) {
+        marks.append(LensMark(note: L("لمعة معلّمة (قوة \(Int(c.score*100))٪)", "Marked glint (strength \(Int(c.score*100))%)")))
+        UINotificationFeedbackGenerator().notificationOccurred(.warning)
     }
 
     func markTop() {
