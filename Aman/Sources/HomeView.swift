@@ -99,6 +99,18 @@ struct HomeView: View {
                 }
             }
             .navigationDestination(for: ToolRoute.self) { r in ToolDestination(route: r, path: $path) }
+            .onAppear {
+                guard let s = ShotMode.screen, path.isEmpty else { return }
+                ShotMode.seed(store)
+                switch s {
+                case "magnet": path.append(ToolRoute.magnetMeter)
+                case "ble": path.append(ToolRoute.bleList)
+                case "lens": path.append(ScanStep.lens)
+                case "result": path.append(ScanStep.result)
+                case "privacy": path.append(ToolRoute.privacy)
+                default: break
+                }
+            }
         }
         .amanLayout(store.lang)
         .sheet(isPresented: $showSettings) {

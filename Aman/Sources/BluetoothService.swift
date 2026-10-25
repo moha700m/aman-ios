@@ -56,6 +56,7 @@ final class BluetoothService: NSObject, ObservableObject {
     }
 
     func start() {
+        if ShotMode.active { return }
         devices.removeAll(); smoothers.removeAll()
         scanning = true   // if BT not ready yet, didUpdateState starts the scan
         let c = ensureCentral()

@@ -12,15 +12,24 @@ jobs:
       - name: Capture
         run: |
           set +e
-          FIRST=$(xcrun simctl list devices available | grep -E "iPhone 1[67]" | head -1 | grep -oE "[A-F0-9-]{36}")
+          FIRST=$(xcrun simctl list devices available | grep -E "iPhone 1[67] Pro Max" | head -1 | grep -oE "[A-F0-9-]{36}")
+          echo "sim $FIRST"
           xcodebuild build -project Aman.xcodeproj -scheme Aman -configuration Debug -destination "id=$FIRST" -derivedDataPath build CODE_SIGNING_ALLOWED=NO -quiet || exit 1
           APP=$(find build/Build/Products -name Aman.app -path "*iphonesimulator*" | head -1)
           mkdir -p shots
           xcrun simctl boot $FIRST; xcrun simctl bootstatus $FIRST -b >/dev/null
-          xcrun simctl status_bar $FIRST override --time 9:41 --batteryState charged --batteryLevel 100
+          xcrun simctl status_bar $FIRST override --time 9:41 --batteryState charged --batteryLevel 100 --cellularBars 4 --wifiBars 3
           xcrun simctl install $FIRST "$APP"
-          xcrun simctl launch $FIRST com.moha700m.aman; sleep 4
-          xcrun simctl io $FIRST screenshot shots/home.png
+          for L in ar en; do
+            xcrun simctl spawn $FIRST defaults write com.moha700m.aman aman.lang $L
+            xcrun simctl spawn $FIRST defaults write com.moha700m.aman AppleLanguages -array $L
+            i=1
+            for S in home magnet ble lens result privacy; do
+              xcrun simctl terminate $FIRST com.moha700m.aman 2>/dev/null
+              SIMCTL_CHILD_AMAN_SHOT=$S xcrun simctl launch $FIRST com.moha700m.aman; sleep 6
+              xcrun simctl io $FIRST screenshot shots/$L-$i-$S.png; i=$((i+1))
+            done
+          done
           xcrun simctl shutdown $FIRST
           ls shots
       - uses: actions/upload-artifact@v4

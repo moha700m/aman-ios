@@ -43,6 +43,7 @@ final class MagnetometerService: ObservableObject {
     }
 
     func start(clearSpikes: Bool = true) {
+        if ShotMode.active { return }
         guard motion.isMagnetometerAvailable else { available = false; return }
         if running { return }
         available = true

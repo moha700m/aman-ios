@@ -35,6 +35,7 @@ final class LensGlintService: NSObject, ObservableObject {
     }
 
     func start() async {
+        if ShotMode.active { return }
         let ok = await AVCaptureDevice.requestAccess(for: .video)
         guard ok else { permissionDenied = true; return }
         permissionDenied = false
