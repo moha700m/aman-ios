@@ -77,7 +77,7 @@ struct BluetoothView: View {
                     .background((d.suspicious ? AmanTheme.warn : AmanTheme.green).opacity(0.12), in: RoundedRectangle(cornerRadius: 12))
                 VStack(alignment: .leading, spacing: 2) {
                     Text(d.name).font(.subheadline.weight(.bold)).foregroundStyle(AmanTheme.ink)
-                    Text("\(d.family.title) · \(d.proximity) · \(d.rssi) dBm")
+                    Text((d.family == .unknown ? "" : "\(d.family.title) · ") + "\(d.proximity) · \(d.rssi) dBm")
                         .font(.caption)
                         .foregroundStyle(AmanTheme.ink.opacity(0.5))
                 }

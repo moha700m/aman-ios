@@ -77,10 +77,7 @@ final class BluetoothService: NSObject, ObservableObject {
         let match = TrackerSignatures.match(advertisement: adv, name: peripheral.name ?? (adv[CBAdvertisementDataLocalNameKey] as? String))
         let advName = (peripheral.name ?? (adv[CBAdvertisementDataLocalNameKey] as? String) ?? "")
             .trimmingCharacters(in: .whitespacesAndNewlines)
-        // Hide anonymous devices: keep only named peripherals or known-tracker signature hits.
-        let known = devices.contains { $0.id == peripheral.identifier }
-        if advName.isEmpty && match.family == .unknown && !known { return }
-        let name = advName.isEmpty ? match.family.title : advName
+        let name = advName.isEmpty ? (match.family != .unknown ? match.family.title : BLENamer.label(adv: adv, id: peripheral.identifier)) : advName
 
         if let i = devices.firstIndex(where: { $0.id == peripheral.identifier }) {
             devices[i].rssi = rssi
@@ -88,6 +85,7 @@ final class BluetoothService: NSObject, ObservableObject {
             devices[i].lastSeen = Date()
             devices[i].samples += 1
             devices[i].smoothed = smooth
+            if !advName.isEmpty { devices[i].name = advName }
             if match.family != .unknown {
                 devices[i].family = match.family
                 devices[i].detail = match.detail
