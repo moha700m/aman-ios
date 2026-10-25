@@ -1,0 +1,154 @@
+{
+ "version": 1,
+ "disclaimerAr": "فحص مساعد — ما يضمن كشف كل الكاميرات أو أجهزة التتبع، وما يستبدل معدات احترافية.",
+ "disclaimerEn": "Helper check — does not guarantee detecting every camera or tracker, and does not replace professional equipment.",
+ "thresholds": {
+  "magnetSpikeQuick": 22,
+  "magnetSpikeBalanced": 18,
+  "magnetSpikeThorough": 12,
+  "magnetHysteresis": 8,
+  "magnetWarmupSeconds": 1.5,
+  "magnetBaselineSamples": 40,
+  "magnetConsecutiveHits": 3,
+  "bleStrongRSSI": -50,
+  "bleMediumRSSI": -70,
+  "lensLumaThreshold": 0.96,
+  "lensMinCluster": 2,
+  "lensMaxCluster": 80,
+  "lensMinFill": 0.45
+ },
+ "checklists": [
+  {
+   "id": "chalet",
+   "ar": "شاليه / استراحة",
+   "en": "Chalet / rest house",
+   "items": [
+    {
+     "id": "c1",
+     "ar": "سقف ودخان الحريق",
+     "en": "Ceiling & smoke detector"
+    },
+    {
+     "id": "c2",
+     "ar": "ساعة المنبه والشاحن",
+     "en": "Alarm clock & charger"
+    },
+    {
+     "id": "c3",
+     "ar": "مرايا الحمام",
+     "en": "Bathroom mirrors"
+    },
+    {
+     "id": "c4",
+     "ar": "فتحات التكييف",
+     "en": "AC vents"
+    },
+    {
+     "id": "c5",
+     "ar": "تحت السرير والطاولة",
+     "en": "Under bed & table"
+    },
+    {
+     "id": "c6",
+     "ar": "تلفزيون والراوتر",
+     "en": "TV & router"
+    }
+   ]
+  },
+  {
+   "id": "hotel",
+   "ar": "فندق",
+   "en": "Hotel",
+   "items": [
+    {
+     "id": "h1",
+     "ar": "ساعة ودولاب",
+     "en": "Clock & wardrobe"
+    },
+    {
+     "id": "h2",
+     "ar": "مرايا ودش",
+     "en": "Mirrors & shower"
+    },
+    {
+     "id": "h3",
+     "ar": "شاحن حائط وUSB",
+     "en": "Wall charger & USB"
+    },
+    {
+     "id": "h4",
+     "ar": "دخان الحريق",
+     "en": "Smoke detector"
+    },
+    {
+     "id": "h5",
+     "ar": "تحت السرير",
+     "en": "Under the bed"
+    }
+   ]
+  },
+  {
+   "id": "fitting",
+   "ar": "غرفة قياس",
+   "en": "Fitting room",
+   "items": [
+    {
+     "id": "f1",
+     "ar": "مرايا بزوايا",
+     "en": "Angled mirrors"
+    },
+    {
+     "id": "f2",
+     "ar": "خطاف وشنطة",
+     "en": "Hook & bag area"
+    },
+    {
+     "id": "f3",
+     "ar": "سقف وإضاءة",
+     "en": "Ceiling & lights"
+    },
+    {
+     "id": "f4",
+     "ar": "فتحات تهوية",
+     "en": "Vents"
+    }
+   ]
+  }
+ ],
+ "tips": [
+  {
+   "ar": "حرّك الجوال ببطء قرب الجسم المشتبه — الارتفاع المفاجئ يستاهل نظرة بالعين.",
+   "en": "Move slowly near a suspect object — a sudden spike deserves a closer look."
+  },
+  {
+   "ar": "أطفي النور وفعّل الفلاش عشان تبان لمعة العدسة أوضح.",
+   "en": "Lights off and torch on makes lens glints easier to spot."
+  },
+  {
+   "ar": "جهاز البلوتوث القوي جدًا (−50 أو أعلى) غالبًا في نفس الغرفة.",
+   "en": "Very strong BLE (−50 or higher) is usually in the same room."
+  },
+  {
+   "ar": "المغنطيس يتأثر بالسماعات والمعدن — مو إثبات كاميرا.",
+   "en": "Magnetometer reacts to speakers and metal — not proof of a camera."
+  }
+ ],
+ "hidingSpotsAr": [
+  "شاحن USB",
+  "ساعة منبه",
+  "دخان حريق",
+  "تكييف",
+  "مرآة",
+  "ورد صناعي",
+  "تلفزيون"
+ ],
+ "hidingSpotsEn": [
+  "USB charger",
+  "Alarm clock",
+  "Smoke detector",
+  "AC vent",
+  "Mirror",
+  "Fake plant",
+  "TV"
+ ]
+}
