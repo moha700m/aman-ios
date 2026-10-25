@@ -3,6 +3,7 @@ import SwiftUI
 struct HomeView: View {
     @EnvironmentObject var store: AmanStore
     @State private var path = NavigationPath()
+    @State private var showSettings = false
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -20,6 +21,13 @@ struct HomeView: View {
                                     .foregroundStyle(AmanTheme.ink)
                             }
                             Spacer()
+                            Button { showSettings = true } label: {
+                                Image(systemName: "gearshape.fill")
+                                    .font(.title3)
+                                    .foregroundStyle(AmanTheme.ink.opacity(0.7))
+                                    .padding(10)
+                                    .background(Color.white.opacity(0.7), in: Circle())
+                            }
                             Image(systemName: "shield.checkered")
                                 .font(.title2)
                                 .foregroundStyle(AmanTheme.green)
@@ -89,7 +97,10 @@ struct HomeView: View {
                 }
             }
         }
-        .amanLayout()
+        .amanLayout(store.lang)
+        .sheet(isPresented: $showSettings) {
+            SettingsView().environmentObject(store)
+        }
         .tint(AmanTheme.green)
     }
 

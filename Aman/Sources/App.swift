@@ -8,6 +8,8 @@ struct AmanApp: App {
         WindowGroup {
             HomeView()
                 .environmentObject(store)
+                .amanLayout(store.lang)
+                .id(store.lang) // force full tree refresh on language switch
                 .preferredColorScheme(.light)
         }
     }

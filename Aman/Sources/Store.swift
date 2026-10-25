@@ -8,6 +8,7 @@ final class AmanStore: ObservableObject {
     @Published var checklistId: String = "chalet"
     @Published var checked: Set<String> = []
     @Published var lastSummary: ScanResultSummary?
+    @Published var lang: AppLang = L10n.lang
 
     let magnet = MagnetometerService()
     let ble = BluetoothService()
@@ -15,8 +16,19 @@ final class AmanStore: ObservableObject {
 
     init() {
         catalog = CatalogService.cached() ?? .bundled
+        // Ensure default Arabic is persisted so first launch is never system-English.
+        if UserDefaults.standard.string(forKey: L10n.storageKey) == nil {
+            L10n.setLang(.ar)
+            lang = .ar
+        }
         applyThresholds()
         Task { await refreshCatalog() }
+    }
+
+    func setLanguage(_ newLang: AppLang) {
+        L10n.setLang(newLang)
+        lang = newLang
+        objectWillChange.send()
     }
 
     func refreshCatalog() async {

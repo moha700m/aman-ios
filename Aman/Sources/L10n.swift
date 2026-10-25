@@ -1,23 +1,41 @@
 import Foundation
 import SwiftUI
 
-enum AppLang: String { case ar, en }
+enum AppLang: String, CaseIterable, Identifiable {
+    case ar, en
+    var id: String { rawValue }
+    var title: String {
+        switch self {
+        case .ar: return "العربية"
+        case .en: return "English"
+        }
+    }
+}
 
 enum L10n {
+    static let storageKey = "aman.lang"
+
+    /// Arabic is the product default. System locale is ignored until the user picks a language in Settings.
     static var lang: AppLang {
-        if let forced = UserDefaults.standard.string(forKey: "forceLang") {
-            return AppLang(rawValue: forced) ?? .ar
+        if let raw = UserDefaults.standard.string(forKey: storageKey),
+           let v = AppLang(rawValue: raw) {
+            return v
         }
-        let code = Locale.preferredLanguages.first ?? "ar"
-        return code.hasPrefix("ar") ? .ar : .en
+        return .ar
     }
+
+    static func setLang(_ lang: AppLang) {
+        UserDefaults.standard.set(lang.rawValue, forKey: storageKey)
+    }
+
     static func t(_ ar: String, _ en: String) -> String { lang == .ar ? ar : en }
 }
 
 func L(_ ar: String, _ en: String) -> String { L10n.t(ar, en) }
 
 extension View {
-    func amanLayout() -> some View {
-        environment(\.layoutDirection, L10n.lang == .ar ? .rightToLeft : .leftToRight)
+    func amanLayout(_ lang: AppLang = L10n.lang) -> some View {
+        environment(\.layoutDirection, lang == .ar ? .rightToLeft : .leftToRight)
+            .environment(\.locale, Locale(identifier: lang == .ar ? "ar_SA" : "en_US"))
     }
 }

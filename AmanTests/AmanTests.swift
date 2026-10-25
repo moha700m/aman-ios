@@ -11,24 +11,21 @@ final class AmanTests: XCTestCase {
     }
 
     func testAppleFindMySignature() {
-        // company 0x004C LE + type 0x12 + len 0x19 + status 0x00
         var bytes: [UInt8] = [0x4C, 0x00, 0x12, 0x19, 0x00]
         bytes += Array(repeating: 0x11, count: 24)
-        let data = Data(bytes)
-        let m = TrackerSignatures.matchManufacturer(data)
+        let m = TrackerSignatures.matchManufacturer(Data(bytes))
         XCTAssertEqual(m?.family, .airTag)
         XCTAssertEqual(m?.suspicious, true)
     }
 
     func testAppleFindMyMaintainedLessSuspicious() {
-        var bytes: [UInt8] = [0x4C, 0x00, 0x12, 0x19, 0x24] // maintained bit-ish + full battery pattern
+        var bytes: [UInt8] = [0x4C, 0x00, 0x12, 0x19, 0x24]
         bytes += Array(repeating: 0x22, count: 24)
         let m = TrackerSignatures.matchManufacturer(Data(bytes))
         XCTAssertEqual(m?.family, .airTag)
     }
 
     func testTileServiceUUIDHeuristic() {
-        // Simulated via name fallback
         let m = TrackerSignatures.match(advertisement: [:], name: "Tile Pro")
         XCTAssertEqual(m.family, .tile)
         XCTAssertTrue(m.suspicious)
@@ -53,5 +50,15 @@ final class AmanTests: XCTestCase {
         let t = Catalog.bundled.thresholds
         XCTAssertGreaterThan(t.magnetSpikeQuick, t.magnetSpikeBalanced)
         XCTAssertGreaterThan(t.magnetSpikeBalanced, t.magnetSpikeThorough)
+    }
+
+    func testDefaultLanguageIsArabic() {
+        UserDefaults.standard.removeObject(forKey: L10n.storageKey)
+        XCTAssertEqual(L10n.lang, .ar)
+        L10n.setLang(.en)
+        XCTAssertEqual(L10n.lang, .en)
+        XCTAssertEqual(L("مرحبا", "Hello"), "Hello")
+        L10n.setLang(.ar)
+        XCTAssertEqual(L("مرحبا", "Hello"), "مرحبا")
     }
 }
