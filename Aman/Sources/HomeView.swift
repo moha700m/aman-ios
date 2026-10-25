@@ -77,6 +77,8 @@ struct HomeView: View {
                             feature(L("قائمة غرف", "Room list"), "checklist")
                         }
 
+                        ToolsSection()
+
                         Text(L("خصوصيتك محلية · ما نرفع صور", "Privacy stays on-device · no photo upload"))
                             .font(.caption2)
                             .foregroundStyle(AmanTheme.ink.opacity(0.45))
@@ -96,6 +98,7 @@ struct HomeView: View {
                 case .result: ResultView(path: $path)
                 }
             }
+            .navigationDestination(for: ToolRoute.self) { r in ToolDestination(route: r, path: $path) }
         }
         .amanLayout(store.lang)
         .sheet(isPresented: $showSettings) {

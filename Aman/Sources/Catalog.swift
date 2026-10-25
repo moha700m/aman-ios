@@ -46,6 +46,42 @@ struct Catalog: Codable, Equatable {
     var tips: [CatalogTip]
     var hidingSpotsAr: [String]
     var hidingSpotsEn: [String]
+    var rfTips: [CatalogTip]? = nil
+    var wifiTips: [CatalogTip]? = nil
+    var privacyTips: [CatalogTip]? = nil
+    var guidedSteps: [CatalogTip]? = nil
+
+    var tipOfDay: CatalogTip? {
+        guard !tips.isEmpty else { return nil }
+        let day = Calendar.current.ordinality(of: .day, in: .era, for: Date()) ?? 0
+        return tips[day % tips.count]
+    }
+    var rf: [CatalogTip] { rfTips ?? Catalog.defaultRF }
+    var wifi: [CatalogTip] { wifiTips ?? Catalog.defaultWiFi }
+    var privacy: [CatalogTip] { privacyTips ?? Catalog.defaultPrivacy }
+    var steps: [CatalogTip] { guidedSteps ?? Catalog.defaultSteps }
+
+    static let defaultRF: [CatalogTip] = [
+        .init(ar: "الجوال ما يقدر يقيس ترددات الراديو مباشرة — أي تطبيق يقول كذا يبالغ.", en: "Phones can't measure RF directly — apps claiming that overstate."),
+        .init(ar: "افصل الأجهزة غير الضرورية (شاحن، ساعة) وشوف إذا فيها ضوء أو فتحة صغيرة.", en: "Unplug non-essential gadgets (chargers, clocks) and check for tiny holes or LEDs."),
+        .init(ar: "الأجهزة اللي تبث بلوتوث تظهر بقائمة البلوتوث — راجعها بعد ما تطفي أجهزتك.", en: "BLE-broadcasting devices show in the Bluetooth list — review it after turning off your own gear."),
+        .init(ar: "الكاميرا المسجلة على كرت ذاكرة ما تبث شي — الفحص البصري هو الأهم.", en: "SD-card cameras broadcast nothing — visual inspection matters most.")]
+    static let defaultWiFi: [CatalogTip] = [
+        .init(ar: "اسأل المضيف عن عدد الأجهزة المتصلة بالراوتر وأسمائها.", en: "Ask the host how many devices are on the router and what they are."),
+        .init(ar: "أسماء شبكات مثل IPCAM أو 'cam' أو أرقام غريبة تستاهل سؤال.", en: "Network names like IPCAM, 'cam' or odd numbers are worth asking about."),
+        .init(ar: "تطبيق الراوتر (إن أعطاك المضيف الصلاحية) يعرض كل الأجهزة.", en: "The router app (if the host allows) lists every connected device."),
+        .init(ar: "iOS ما يسمح للتطبيقات تمسح كل أجهزة الشبكة — لذلك ما نعرضها.", en: "iOS doesn't let apps list every network device — so we don't pretend to.")]
+    static let defaultPrivacy: [CatalogTip] = [
+        .init(ar: "غطِّ أي عدسة مشكوك فيها بشريط أو قماش.", en: "Cover any suspicious lens with tape or cloth."),
+        .init(ar: "وجّه الشواحن والساعات بعيد عن السرير والحمام.", en: "Turn chargers and clocks away from the bed and bathroom."),
+        .init(ar: "تأكد إن المرايا ما فيها فراغ خلفها (قرّب إصبعك: فراغ = مرآة عادية بعيدة).", en: "Check mirrors: a gap between finger and reflection usually means a normal mirror."),
+        .init(ar: "إذا لقيت شي فعلي: صوّره، لا تلمسه، وبلّغ الجهات المختصة.", en: "If you find something real: photograph it, don't touch it, and report it.")]
+    static let defaultSteps: [CatalogTip] = [
+        .init(ar: "١. أطفِ أجهزتك اللي تبث بلوتوث (سماعات، ساعة).", en: "1. Turn off your own Bluetooth gear (earbuds, watch)."),
+        .init(ar: "٢. امسح البلوتوث دقيقة وانتبه للمتتبعات.", en: "2. Scan Bluetooth for a minute and watch for trackers."),
+        .init(ar: "٣. مرّر المغناطيس على الشواحن والساعات والدخان.", en: "3. Sweep the magnetometer over chargers, clocks, smoke detectors."),
+        .init(ar: "٤. أطفِ النور وافحص اللمعة بالفلاش ببطء.", en: "4. Lights off, sweep slowly for glints with the torch."),
+        .init(ar: "٥. كمّل قائمة الغرفة وصدّر التقرير.", en: "5. Finish the room checklist and export the report.")]
 
     static let remoteURL = URL(string: "https://moha700m.github.io/aman-ios/catalog.json")!
 

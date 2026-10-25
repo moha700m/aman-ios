@@ -13,6 +13,8 @@ struct BLEDevice: Identifiable, Equatable {
     var lastSeen: Date
     var peakRSSI: Int
     var samples: Int
+    var smoothed: Double = -100
+    var proximity: String { RSSISmoother.proximity(smoothed) }
 
     var rssiLabel: String {
         if rssi >= -50 { return L("قوي جدًا", "Very strong") }
@@ -28,14 +30,25 @@ final class BluetoothService: NSObject, ObservableObject {
     @Published var poweredOn = false
     @Published var authDenied = false
 
-    private var central: CBCentralManager!
+    private var central: CBCentralManager?
+    @Published var state: CBManagerState = .unknown
     private var strong = -50
     private var medium = -70
+    private var smoothers: [UUID: RSSISmoother] = [:]
 
-    override init() {
-        super.init()
-        central = CBCentralManager(delegate: self, queue: .main)
+    override init() { super.init() }
+
+    /// Created lazily (first scan) so the permission prompt appears in context, and with the
+    /// system power alert disabled — its "Settings" link opens a broken pane on recent iOS.
+    private func ensureCentral() -> CBCentralManager {
+        if let c = central { return c }
+        let c = CBCentralManager(delegate: self, queue: .main,
+                                 options: [CBCentralManagerOptionShowPowerAlertKey: false])
+        central = c
+        return c
     }
+
+    var authorization: CBManagerAuthorization { CBCentralManager.authorization }
 
     func configure(from t: CatalogThresholds) {
         strong = t.bleStrongRSSI
@@ -43,21 +56,24 @@ final class BluetoothService: NSObject, ObservableObject {
     }
 
     func start() {
-        devices.removeAll()
-        guard central.state == .poweredOn else { return }
-        scanning = true
-        central.scanForPeripherals(withServices: nil, options: [
+        devices.removeAll(); smoothers.removeAll()
+        scanning = true   // if BT not ready yet, didUpdateState starts the scan
+        let c = ensureCentral()
+        guard c.state == .poweredOn else { return }
+        c.scanForPeripherals(withServices: nil, options: [
             CBCentralManagerScanOptionAllowDuplicatesKey: true
         ])
     }
 
     func stop() {
-        central.stopScan()
+        central?.stopScan()
         scanning = false
     }
 
     private func upsert(_ peripheral: CBPeripheral, adv: [String: Any], rssi: Int) {
         guard rssi < 0, rssi > -127 else { return }
+        var sm = smoothers[peripheral.identifier] ?? RSSISmoother()
+        let smooth = sm.feed(rssi); smoothers[peripheral.identifier] = sm
         let match = TrackerSignatures.match(advertisement: adv, name: peripheral.name ?? (adv[CBAdvertisementDataLocalNameKey] as? String))
         let name = peripheral.name
             ?? (adv[CBAdvertisementDataLocalNameKey] as? String)
@@ -68,19 +84,18 @@ final class BluetoothService: NSObject, ObservableObject {
             devices[i].peakRSSI = max(devices[i].peakRSSI, rssi)
             devices[i].lastSeen = Date()
             devices[i].samples += 1
+            devices[i].smoothed = smooth
             if match.family != .unknown {
                 devices[i].family = match.family
                 devices[i].detail = match.detail
-                devices[i].suspicious = match.suspicious || rssi >= strong
-            } else if rssi >= strong {
                 devices[i].suspicious = true
             }
         } else {
-            let sus = match.suspicious || (match.family.isTrackerHeuristic) || rssi >= strong
+            let sus = match.family.isTrackerHeuristic || match.suspicious
             devices.append(BLEDevice(
                 id: peripheral.identifier, name: name, rssi: rssi,
                 family: match.family, detail: match.detail, suspicious: sus,
-                lastSeen: Date(), peakRSSI: rssi, samples: 1
+                lastSeen: Date(), peakRSSI: rssi, samples: 1, smoothed: smooth
             ))
             if sus { UIImpactFeedbackGenerator(style: .light).impactOccurred() }
         }
@@ -91,6 +106,7 @@ final class BluetoothService: NSObject, ObservableObject {
 extension BluetoothService: CBCentralManagerDelegate {
     nonisolated func centralManagerDidUpdateState(_ central: CBCentralManager) {
         Task { @MainActor in
+            state = central.state
             poweredOn = central.state == .poweredOn
             authDenied = central.state == .unauthorized
             if poweredOn && scanning {

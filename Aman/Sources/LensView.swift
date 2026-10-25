@@ -80,10 +80,19 @@ struct LensView: View {
                 .padding(16)
             }
 
-            if store.lens.permissionDenied {
-                Color.black.opacity(0.7).ignoresSafeArea()
-                Text(L("فعّل إذن الكاميرا من الإعدادات", "Enable camera permission in Settings"))
-                    .foregroundStyle(.white).padding()
+            if store.lens.permissionDenied || !store.lens.cameraAvailable {
+                AmanTheme.sand.ignoresSafeArea()
+                VStack(spacing: 16) {
+                    Image("LensDemo").resizable().scaledToFill().frame(height: 220).clipped()
+                        .clipShape(RoundedRectangle(cornerRadius: 20))
+                    StatusCard(symbol: "camera.fill",
+                               title: store.lens.permissionDenied ? L("إذن الكاميرا مقفل", "Camera permission is off")
+                                                                 : L("الكاميرا غير متوفرة", "Camera unavailable"),
+                               message: L("تقدر تستخدم «مساعد الفلاش» من الأدوات وتفحص بعينك، أو فعّل الكاميرا من الإعدادات.",
+                                           "Use the Flashlight helper from Tools and check by eye, or enable the camera in Settings."),
+                               showSettings: store.lens.permissionDenied)
+                    PrimaryButton(title: L("التالي · القائمة", "Next · checklist")) { path.append(ScanStep.checklist) }
+                }.padding(20)
             }
         }
         .navigationBarTitleDisplayMode(.inline)

@@ -1,0 +1,4 @@
+"CFBundleDisplayName" = "أمان الغرفة";
+"NSBluetoothAlwaysUsageDescription" = "البلوتوث لمسح أجهزة التتبع القريبة (AirTag وTile). فحص مساعد.\nBluetooth is used to scan for nearby trackers like AirTag and Tile. Helper check only.";
+"NSBluetoothPeripheralUsageDescription" = "البلوتوث لمسح أجهزة التتبع القريبة. فحص مساعد.\nBluetooth is used to scan for nearby trackers. Helper check only.";
+"NSCameraUsageDescription" = "الكاميرا والفلاش لملاحظة لمعة عدسة محتملة، بدون حفظ أو رفع صور.\nCamera and torch help spot possible lens glints. No photos are saved or uploaded.";

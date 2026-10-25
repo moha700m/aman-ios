@@ -3,6 +3,7 @@ import SwiftUI
 struct MagnetView: View {
     @EnvironmentObject var store: AmanStore
     @Binding var path: NavigationPath
+    var standalone = false
 
     var body: some View {
         ZStack {
@@ -15,7 +16,20 @@ struct MagnetView: View {
                     .foregroundStyle(AmanTheme.ink.opacity(0.6))
                     .frame(maxWidth: .infinity, alignment: .leading)
 
+                if !store.magnet.available {
+                    StatusCard(symbol: "sensor", title: L("الحساس غير متوفر", "Sensor unavailable"),
+                               message: L("هذا الجهاز ما فيه مغناطيس متاح.", "This device has no available magnetometer."), showSettings: false)
+                }
                 gauge
+                if standalone && !store.magnet.spikes.isEmpty {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(L("سجل الارتفاعات", "Anomaly history")).font(.caption.weight(.bold)).foregroundStyle(AmanTheme.ink.opacity(0.6))
+                        ForEach(store.magnet.spikes.suffix(4).reversed()) { s in
+                            Text("\(s.date.formatted(date: .omitted, time: .standard)) · Δ \(String(format: "%.0f", s.delta)) µT\(s.pinned ? " 📌" : "")")
+                                .font(.caption).foregroundStyle(AmanTheme.ink.opacity(0.7))
+                        }
+                    }.frame(maxWidth: .infinity, alignment: .leading)
+                }
                 if store.magnet.isSpiking {
                     alert
                 } else if store.magnet.ready {
@@ -35,9 +49,13 @@ struct MagnetView: View {
                 Spacer()
                 HStack(spacing: 10) {
                     SecondaryButton(title: L("ثبّت اشتباه", "Pin suspect")) { store.magnet.pinCurrent() }
-                    PrimaryButton(title: L("التالي · بلوتوث", "Next · Bluetooth")) {
-                        store.magnet.stop()
-                        path.append(ScanStep.bluetooth)
+                    if standalone {
+                        SecondaryButton(title: L("إعادة معايرة", "Recalibrate")) { store.magnet.recalibrate() }
+                    } else {
+                        PrimaryButton(title: L("التالي · بلوتوث", "Next · Bluetooth")) {
+                            store.magnet.stop()
+                            path.append(ScanStep.bluetooth)
+                        }
                     }
                 }
                 DisclaimerBanner()
@@ -46,7 +64,7 @@ struct MagnetView: View {
         }
         .navigationTitle(L("حقل مغناطيسي", "Magnetic field"))
         .navigationBarTitleDisplayMode(.inline)
-        .onAppear { store.magnet.configure(from: store.catalog.thresholds, mode: store.mode); store.magnet.start() }
+        .onAppear { store.magnet.configure(from: store.catalog.thresholds, mode: store.mode); store.magnet.start(clearSpikes: !standalone) }
         .onDisappear { store.magnet.stop() }
     }
 

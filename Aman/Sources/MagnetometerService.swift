@@ -3,11 +3,12 @@ import CoreMotion
 import Combine
 import UIKit
 
-struct MagSpike: Identifiable, Equatable {
+struct MagSpike: Identifiable, Equatable, Codable {
     var id = UUID()
     var magnitude: Double
     var delta: Double
     var date: Date
+    var pinned = false
 }
 
 @MainActor
@@ -20,82 +21,63 @@ final class MagnetometerService: ObservableObject {
     @Published var spikes: [MagSpike] = []
     @Published var ready = false
     @Published var available = true
+    @Published var running = false
+    @Published var peak: Double = 0
 
     private let motion = CMMotionManager()
-    private var samples: [Double] = []
-    private var consecutive = 0
-    private var spikeDelta: Double = 18
-    private var hysteresis: Double = 8
-    private var warmup: TimeInterval = 1.5
-    private var baselineN = 40
-    private var needHits = 3
-    private var startedAt: Date?
-    private let maxHistory = 120
+    private var detector = MagSpikeDetector()
+    private let maxHistory = 200
 
     func configure(from t: CatalogThresholds, mode: ScanMode) {
+        var p = detector.params
         switch mode {
-        case .quick: spikeDelta = t.magnetSpikeQuick
-        case .balanced: spikeDelta = t.magnetSpikeBalanced
-        case .thorough: spikeDelta = t.magnetSpikeThorough
+        case .quick: p.spikeDelta = t.magnetSpikeQuick
+        case .balanced: p.spikeDelta = t.magnetSpikeBalanced
+        case .thorough: p.spikeDelta = t.magnetSpikeThorough
         }
-        hysteresis = t.magnetHysteresis
-        warmup = t.magnetWarmupSeconds
-        baselineN = t.magnetBaselineSamples
-        needHits = t.magnetConsecutiveHits
+        p.hysteresis = t.magnetHysteresis
+        p.warmupSamples = max(5, Int(t.magnetWarmupSeconds * 20))
+        p.baselineN = t.magnetBaselineSamples
+        p.needHits = t.magnetConsecutiveHits
+        detector.params = p
     }
 
-    func start() {
+    func start(clearSpikes: Bool = true) {
         guard motion.isMagnetometerAvailable else { available = false; return }
+        if running { return }
         available = true
-        samples.removeAll(); history.removeAll(); spikes.removeAll()
-        ready = false; isSpiking = false; consecutive = 0
-        startedAt = Date()
+        detector.reset(); history.removeAll(); peak = 0
+        if clearSpikes { spikes.removeAll() }
+        ready = false; isSpiking = false
+        running = true
         motion.magnetometerUpdateInterval = 0.05
         motion.startMagnetometerUpdates(to: .main) { [weak self] data, _ in
             guard let self, let f = data?.magneticField else { return }
-            let mag = sqrt(f.x*f.x + f.y*f.y + f.z*f.z)
-            self.ingest(mag)
+            self.ingest(MagSpikeDetector.magnitude(x: f.x, y: f.y, z: f.z))
         }
     }
 
-    func stop() {
-        motion.stopMagnetometerUpdates()
-    }
+    func stop() { motion.stopMagnetometerUpdates(); running = false }
 
-    private func ingest(_ mag: Double) {
+    func ingest(_ mag: Double) {
+        let ev = detector.feed(mag)
         magnitude = mag
-        history.append(mag)
-        if history.count > maxHistory { history.removeFirst() }
-        samples.append(mag)
-        if samples.count > baselineN { samples.removeFirst() }
-
-        let elapsed = Date().timeIntervalSince(startedAt ?? Date())
-        if elapsed < warmup {
-            baseline = samples.reduce(0,+)/Double(max(samples.count,1))
-            return
-        }
-        ready = true
-        baseline = samples.reduce(0,+)/Double(samples.count)
-        delta = mag - baseline
-
-        if abs(delta) >= spikeDelta {
-            consecutive += 1
-            if consecutive >= needHits {
-                if !isSpiking {
-                    isSpiking = true
-                    let spike = MagSpike(magnitude: mag, delta: delta, date: Date())
-                    spikes.append(spike)
-                    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                }
-            }
-        } else if abs(delta) < hysteresis {
-            consecutive = 0
-            isSpiking = false
+        baseline = detector.baseline
+        delta = detector.delta
+        ready = detector.ready
+        isSpiking = detector.isSpiking
+        peak = max(peak, abs(delta))
+        history.append(mag); if history.count > maxHistory { history.removeFirst() }
+        if case let .spikeStarted(m, d) = ev {
+            spikes.append(MagSpike(magnitude: m, delta: d, date: Date()))
+            UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
         }
     }
 
     func pinCurrent() {
-        spikes.append(MagSpike(magnitude: magnitude, delta: delta, date: Date()))
+        spikes.append(MagSpike(magnitude: magnitude, delta: delta, date: Date(), pinned: true))
         UINotificationFeedbackGenerator().notificationOccurred(.warning)
     }
+
+    func recalibrate() { detector.reset(); history.removeAll(); peak = 0 }
 }

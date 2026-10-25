@@ -3,6 +3,7 @@ import SwiftUI
 struct BluetoothView: View {
     @EnvironmentObject var store: AmanStore
     @Binding var path: NavigationPath
+    var standalone = false
     @State private var focus: UUID?
 
     var body: some View {
@@ -21,17 +22,14 @@ struct BluetoothView: View {
 
                 radar
 
-                if store.ble.authDenied {
-                    Text(L("فعّل إذن البلوتوث من الإعدادات", "Enable Bluetooth permission in Settings"))
-                        .foregroundStyle(AmanTheme.warn)
-                }
+                BluetoothStateCard(state: store.ble.state)
 
                 ScrollView {
                     LazyVStack(spacing: 10) {
                         ForEach(store.ble.devices) { d in
                             deviceRow(d)
                         }
-                        if store.ble.devices.isEmpty {
+                        if store.ble.devices.isEmpty && store.ble.poweredOn {
                             Text(L("يمسح… قرّب من الزوايا والشاحن والدخان",
                                      "Scanning… move near corners, chargers and smoke detectors"))
                                 .font(.subheadline)
@@ -41,9 +39,11 @@ struct BluetoothView: View {
                     }
                 }
 
-                PrimaryButton(title: L("التالي · لمعة العدسة", "Next · Lens glint")) {
-                    store.ble.stop()
-                    path.append(ScanStep.lens)
+                if !standalone {
+                    PrimaryButton(title: L("التالي · لمعة العدسة", "Next · Lens glint")) {
+                        store.ble.stop()
+                        path.append(ScanStep.lens)
+                    }
                 }
                 DisclaimerBanner()
             }
@@ -77,7 +77,7 @@ struct BluetoothView: View {
                     .background((d.suspicious ? AmanTheme.warn : AmanTheme.green).opacity(0.12), in: RoundedRectangle(cornerRadius: 12))
                 VStack(alignment: .leading, spacing: 2) {
                     Text(d.name).font(.subheadline.weight(.bold)).foregroundStyle(AmanTheme.ink)
-                    Text("\(d.family.title) · \(d.detail) · \(d.rssi) dBm")
+                    Text("\(d.family.title) · \(d.proximity) · \(d.rssi) dBm")
                         .font(.caption)
                         .foregroundStyle(AmanTheme.ink.opacity(0.5))
                 }

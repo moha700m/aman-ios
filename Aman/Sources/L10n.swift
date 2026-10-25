@@ -26,6 +26,8 @@ enum L10n {
 
     static func setLang(_ lang: AppLang) {
         UserDefaults.standard.set(lang.rawValue, forKey: storageKey)
+        // Makes iOS pick the matching .lproj (permission prompts, display name) from next launch.
+        UserDefaults.standard.set([lang.rawValue], forKey: "AppleLanguages")
     }
 
     static func t(_ ar: String, _ en: String) -> String { lang == .ar ? ar : en }

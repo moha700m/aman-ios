@@ -1,0 +1,4 @@
+"CFBundleDisplayName" = "أمان الغرفة";
+"NSBluetoothAlwaysUsageDescription" = "يستخدم «أمان الغرفة» البلوتوث لمسح أجهزة التتبع القريبة مثل AirTag وTile. الفحص مساعد وما يضمن كشف كل الأجهزة.";
+"NSBluetoothPeripheralUsageDescription" = "يستخدم «أمان الغرفة» البلوتوث لمسح أجهزة التتبع القريبة. الفحص مساعد.";
+"NSCameraUsageDescription" = "الكاميرا والفلاش يساعدونك تلاحظ لمعة عدسة محتملة. ما نحفظ ولا نرفع أي صورة. الفحص مساعد.";
