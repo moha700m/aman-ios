@@ -75,9 +75,12 @@ final class BluetoothService: NSObject, ObservableObject {
         var sm = smoothers[peripheral.identifier] ?? RSSISmoother()
         let smooth = sm.feed(rssi); smoothers[peripheral.identifier] = sm
         let match = TrackerSignatures.match(advertisement: adv, name: peripheral.name ?? (adv[CBAdvertisementDataLocalNameKey] as? String))
-        let name = peripheral.name
-            ?? (adv[CBAdvertisementDataLocalNameKey] as? String)
-            ?? match.family.title
+        let advName = (peripheral.name ?? (adv[CBAdvertisementDataLocalNameKey] as? String) ?? "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        // Hide anonymous devices: keep only named peripherals or known-tracker signature hits.
+        let known = devices.contains { $0.id == peripheral.identifier }
+        if advName.isEmpty && match.family == .unknown && !known { return }
+        let name = advName.isEmpty ? match.family.title : advName
 
         if let i = devices.firstIndex(where: { $0.id == peripheral.identifier }) {
             devices[i].rssi = rssi
